@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sorteo Viña Vieja</title>
+  <style>
+    :root {
+      --color-primary: #2c3e50;
+      --color-secondary: #2980b9;
+      --color-accent: #e74c3c;
+      --color-light: #ecf0f1;
+      --color-dark: #34495e;
+      --color-success: #27ae60;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f5f7fa;
+      color: #333;
+      line-height: 1.6;
+    }
+    
+    /* Barra de navegación */
+    nav {
+      background-color: var(--color-primary);
+      color: white;
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    nav a {
+      color: white;
+      text-decoration: none;
+      margin: 0 15px;
+      padding: 8px 15px;
+      border-radius: 5px;
+      transition: all 0.3s ease;
+    }
+    
+    nav a:hover {
+      background-color: var(--color-dark);
+    }
+    
+    /* Secciones principales */
+    .section {
+      display: none;
+      padding: 30px;
+    }
+    
+    .section.active {
+      display: block;
+      animation: fadeIn 0.5s ease;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    h2 {
+      color: var(--color-primary);
+      margin-bottom: 25px;
+      text-align: center;
+      font-size: 2rem;
+    }
+    
+    /* Lista de participantes */
+    #participantes .participants-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 25px;
+      margin-top: 30px;
+    }
+    
+    .card {
+      background-color: white;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    }
+    
+    .card-img-container {
+      width: 100%;
+      height: 200px;
+      overflow: hidden;
+    }
+    
+    .card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: all 0.3s ease;
+    }
+    
+    .card:hover img {
+      filter: brightness(1.1);
+      transform: scale(1.05);
+    }
+    
+    .card-content {
+      padding: 15px;
+    }
+    
+    .card-content p {
+      margin-bottom: 8px;
+      font-size: 14px;
+      color: #555;
+    }
+    
+    /* Modal para imagen ampliada */
+    #modalImagen {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.9);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    #modalImagen img {
+      max-width: 90%;
+      max-height: 90%;
+      border-radius: 10px;
+      box-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
+    }
+    
+    /* Ruleta de sorteo */
+    .ruleta-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 30px auto;
+      max-width: 800px;
+    }
+    
+    #ruleta {
+      border: 15px solid var(--color-primary);
+      border-radius: 50%;
+      background-color: white;
+      width: 600px;
+      height: 600px;
+      box-shadow: 0 0 30px rgba(0, 0, 0, 0.2);
+      margin: 0 auto;
+    }
+    
+    #puntero {
+      width: 60px;
+      height: 60px;
+      background-color: var(--color-accent);
+      clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+      position: absolute;
+      margin-top: -630px;
+      z-index: 10;
+    }
+    
+    .controls {
+      margin: 30px 0;
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+    }
+    
+    .controls button {
+      padding: 12px 30px;
+      font-size: 16px;
+      font-weight: bold;
+      color: white;
+      background-color: var(--color-secondary);
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .controls button:hover {
+      background-color: #3498db;
+      transform: translateY(-2px);
+    }
+    
+    /* Historial de ganadores */
+    #historialGanadores {
+      background-color: white;
+      border-radius: 10px;
+      padding: 20px;
+      margin: 30px auto;
+      max-width: 800px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    #historialGanadores h3 {
+      color: var(--color-primary);
+      margin-bottom: 15px;
+      font-size: 1.3rem;
+    }
+    
+    .ganadorHistorial {
+      background-color: var(--color-light);
+      padding: 12px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    
+    /* Anuncio del ganador */
+    #anuncioGanador {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: white;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+      z-index: 100;
+      text-align: center;
+      max-width: 80%;
+      display: none;
+    }
+    
+    #anuncioGanador h2 {
+      color: var(--color-accent);
+      margin-bottom: 20px;
+      font-size: 1.8rem;
+    }
+    
+    #anuncioGanador p {
+      font-size: 1.2rem;
+      margin-bottom: 15px;
+    }
+    
+    #anuncioGanador button {
+      padding: 12px 25px;
+      background-color: var(--color-success);
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 15px;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+      #ruleta {
+        width: 350px;
+        height: 350px;
+      }
+      
+      #puntero {
+        margin-top: -380px;
+      }
+      
+      nav {
+        flex-direction: column;
+        padding: 15px;
+      }
+      
+      nav div {
+        margin: 10px 0;
+      }
+      
+      .controls {
+        flex-direction: column;
+        gap: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div><strong>SORTEO VIÑA VIEJA</strong></div>
+    <div>
+      <a onclick="mostrarSeccion('participantes')">PARTICIPANTES</a>
+      <a onclick="mostrarSeccion('sorteo')">SORTEO</a>
+    </div>
+  </nav>
+
+  <div id="participantes" class="section active">
+    <h2>LISTA DE PARTICIPANTES</h2>
+    <div class="participants-container" id="listaParticipantes"></div>
+  </div>
+
+  <div id="sorteo" class="section">
+    <h2>SORTEO DE AGOSTO</h2>
+    <div class="ruleta-container">
+      <div id="puntero"></div>
+      <canvas id="ruleta" width="600" height="600"></canvas>
+      <div class="controls">
+        <button onclick="girarRuleta()">GIRAR RULETA</button>
+      </div>
+    </div>
+    
+    <div id="historialGanadores">
+      <h3>HISTORIAL DE GANADORES</h3>
+    </div>
+  </div>
+
+  <!-- Modal para imagen ampliada -->
+  <div id="modalImagen">
+    <img id="imagenAmpliada" src="" alt="Imagen ampliada del participante">
+  </div>
+
+  <!-- Anuncio del ganador -->
+  <div id="anuncioGanador">
+    <h2>¡TENEMOS UN GANADOR!</h2>
+    <p id="nombreGanador"></p>
+    <p id="datosGanador"></p>
+    <button onclick="cerrarAnuncio()">CONTINUAR</button>
+  </div>
+
+  <script>
+    // Datos de participantes
+      const participantes = [
+    { nombre: "Angie Kiara Flores Vargas", dni: "75628116", nacimiento: "8/04/2000", telefono: "+51 996018475", celular: "+51 996018475", imagen: "imagen/Angie Kiara Flores Vargas.jpeg" },
+    { nombre: "Angel Armando Cordero Suárez", dni: "40019748", nacimiento: "12/10/1978", telefono: "+51 989990147", celular: "+51 989990147", imagen: "imagen/Angel Armando Cordero Suárez.jpeg" },
+    { nombre: "Ana Cecilia Castellares Garcia", dni: "08884457", nacimiento: "4/03/1973", telefono: "+51 993320938", celular: "+51 993320938", imagen: "imagen/Ana Cecilia Castellares Garcia.jpeg" },
+    { nombre: "Jophret Andres Callirgos Lopez", dni: "71710384", nacimiento: "2/12/1995", telefono: "+51 960687304", celular: "+51 997274966", imagen: "imagen/Jophret Andres Callirgos Lopez.jpeg" },
+    { nombre: "Aurelio Brazzan Gonzales", dni: "08742297", nacimiento: "25/09/1951", telefono: "+51 966540226", celular: "+51 966540226", imagen: "imagen/Aurelio Brazzan Gonzales.png" },
+    { nombre: "Luis Angel Cervantes Rengifo", dni: "60929799", nacimiento: "1/01/2002", telefono: "+51 912380358", celular: "+51 912380358", imagen: "imagen/Luis Angel cervantes rengifo.jpeg" },
+    { nombre: "Carolina Andrea Mostajo Sáenz", dni: "72209130", nacimiento: "7/03/1994", telefono: "+51 987080065", celular: "+51 987080065", imagen: "imagen/Carolina Andrea Mostajo Sáenz.jpeg" },
+    { nombre: "Carmen Rosa Baez Pomahuacre", dni: "70105226", nacimiento: "15/12/1991", telefono: "+51 944273215", celular: "+51 944273215", imagen: "imagen/Carmen Rosa Baez Pomahuacre.jpeg" },
+    { nombre: "Karina Patricia Casanova Tagle", dni: "10194417", nacimiento: "1/10/1974", telefono: "+51 940605522", celular: "+51 940605522", imagen: "imagen/Karina Patricia Casanova Tagle.jpeg" },
+    { nombre: "Roxana Quispe Ttupa", dni: "45027294", nacimiento: "13/10/1987", telefono: "+51 906057822", celular: "+51 906057822", imagen: "imagen/Roxana Quispe Ttupa.jpeg" },
+    { nombre: "Scoly Castañeda Narváez", dni: "75270165", nacimiento: "17/05/2003", telefono: "+51 917764899", celular: "+51 945946731", imagen: "imagen/Scoly Castañeda Narváez.jpeg" },
+    { nombre: "Diego Valverde Carbajal", dni: "60001840", nacimiento: "5/04/1992", telefono: "+51 994489723", celular: "+51 994489723", imagen: "imagen/Diego Valverde Carbajal.jpeg" },
+    { nombre: "Rosa Hermenegilda Pozo Guadamur", dni: "40930395", nacimiento: "3/06/1981", telefono: "+51 967948840", celular: "+51 986940885", imagen: "imagen/Rosa Hermenegilda Pozo Guadamur.jpeg" },
+    { nombre: "Marco Antonio Prieto Urbina", dni: "49077909", nacimiento: "1/03/1983", telefono: "+51 982945395", celular: "+51 982845395", imagen: "imagen/Marco Antonio prieto Urbina.jpeg" },
+    { nombre: "Graciela Garcia Elguera", dni: "06662024", nacimiento: "19/11/1968", telefono: "+51 957636996", celular: "+51 957636996", imagen: "imagen/Graciela Garcia Elguera.jpeg" },
+    { nombre: "Víctor Ahane Ahane", dni: "06123218", nacimiento: "12/11/1949", telefono: "+51 992776666", celular: "+51 984444311", imagen: "imagen/Víctor Ahane Ahane.png" },
+    { nombre: "Silvia susana Cáceres Atamari", dni: "41448152", nacimiento: "12/08/1982", telefono: "+51 991242323", celular: "+51 991242323", imagen: "imagen/Silvia susana Cáceres atamari.jpeg" },
+    { nombre: "Allan Pierre Seminario Alburquerque", dni: "41550182", nacimiento: "14/09/1982", telefono: "+51 960355459", celular: "+51 960355459", imagen: "imagen/Allan Pierre Seminario Alburquerque.jpeg" },
+    { nombre: "Elina Lucila Marchena Guzman", dni: "46301368", nacimiento: "17/08/1989", telefono: "+51 978002128", celular: "+51 978002128", imagen: "imagen/Elina Lucila Marchena Guzman.jpeg" },
+    { nombre: "María Alejandra Mendez Vega", dni: "44822209", nacimiento: "1/02/1988", telefono: "+51 984308663", celular: "+51 984308663", imagen: "imagen/María Alejandra Mendez Vega.jpeg" },
+    { nombre: "Mardy Mariños Meléndez", dni: "43090937", nacimiento: "13/08/1985", telefono: "+51 996944517", celular: "+51 996944517", imagen: "imagen/Mardy Mariños Meléndez.jpeg" },
+    { nombre: "Leslie Giuliana Bazalar Quezada", dni: "71347751", nacimiento: "13/11/1991", telefono: "+51 954117741", celular: "+51 954117741", imagen: "imagen/Leslie Giuliana Bazalar Quezada.jpeg" },
+    { nombre: "Dane Bruce Cachi Eugenio", dni: "09875556", nacimiento: "29/10/1973", telefono: "+51 968886079", celular: "+51 968886079", imagen: "imagen/Dane Bruce Cachi Eugenio.jpeg" },
+    { nombre: "Julio Andre de la breña Romani", dni: "45556794", nacimiento: "19/02/1989", telefono: "+51 918891701", celular: "+51 900330649", imagen: "imagen/Julio andre de la breña romani.jpeg" },
+    { nombre: "Eddy Henry Gonzales Carrera", dni: "41073359", nacimiento: "18/10/1981", telefono: "+51 945462287", celular: "+51 945462287", imagen: "imagen/Eddy henry Gonzales carrera.jpeg" },
+    { nombre: "Carlos Alfonso Muñoz Rubio", dni: "41241984", nacimiento: "4/03/1982", telefono: "+51 991899650", celular: "+51 991899650", imagen: "imagen/Carlos Alfonso Muñoz Rubio.jpeg" },
+    { nombre: "Alejandro Felipe Alvarado Tolentino", dni: "73177839", nacimiento: "11/04/1998", telefono: "+51 940321934", celular: "+51 940321934", imagen: "imagen/Alejandro Felipe Alvarado Tolentino.jpeg" },
+    { nombre: "Dante Acosta Zapata", dni: "10731954", nacimiento: "12/06/1978", telefono: "+51 943702496", celular: "+51 943702496", imagen: "imagen/Dante Acosta Zapata.jpeg" },
+    { nombre: "Liz Rivera Suárez", dni: "40336025", nacimiento: "24/08/1979", telefono: "+51 990804579", celular: "+51 990804579", imagen: "imagen/Liz Rivera Suárez.jpeg" },
+    { nombre: "Alvaro Rafael Dominguez Albines", dni: "72216663", nacimiento: "2/12/1979", telefono: "+51 962168953", celular: "+51 962168953", imagen: "imagen/Alvaro Rafael Dominguez Albines.jpeg" },
+    { nombre: "Jose Luis Mendoza Humeres", dni: "42100051", nacimiento: "16/09/1983", telefono: "+51 955605873", celular: "+51 955605873", imagen: "imagen/Jose Luis Mendoza Humeres.jpeg" },
+    { nombre: "Oswaldo Azurin Camacho", dni: "42371735", nacimiento: "26/03/1984", telefono: "+51 991512281", celular: "+51 991512281", imagen: "imagen/Oswaldo azurin camacho.jpeg" },
+    { nombre: "Elena Ramírez Sánchez", dni: "70894447", nacimiento: "4/02/1996", telefono: "+51 986144511", celular: "+51 986144511", imagen: "imagen/Elena Ramírez Sánchez.jpeg" },
+    { nombre: "Olinda Gordillo Villanueva", dni: "17921066", nacimiento: "24/06/1961", telefono: "+51 921073268", celular: "+51 921073268", imagen: "imagen/Olinda Gordillo Villanueva.jpeg" },
+    { nombre: "Miguel Angel Salsavilca Ticla", dni: "09677612", nacimiento: "14/07/1974", telefono: "+51 991995881", celular: "+51 991995881", imagen: "imagen/Miguel Angel Salsavilca Ticla.jpeg" },
+    { nombre: "Edwin Loayza Libano", dni: "10022323", nacimiento: "21/09/1974", telefono: "+51 987566913", celular: "+51 987566913", imagen: "imagen/Edwin Loayza Libano.jpeg"},
+    { nombre: "Johan Junior Murrieta Lopez", dni: "74470609", nacimiento: "23/08/1994", telefono: "+51 902814936", celular: "+51 902814936", imagen: "imagen/Johan Junior Murrieta Lopez.jpeg" },
+    { nombre: "Manuel Humberto Martínez Vargas", dni: "07475115", nacimiento: "17/06/1944", telefono: "+51 955912167 ", celular: "+51 955912167", imagen: "imagen/Manuel Humberto Martínez Vargas.jpeg" },
+    { nombre: "Lydia Maria Villano Alfaro", dni: "08845658", nacimiento: "18/10/1964 ", telefono: "+51 998921924 ", celular: "+51 998921924", imagen: "imagen/Lydia Maria Villano Alfaro.jpeg" },
+    { nombre: "Juan Uema Tamashiro", dni: "07454108", nacimiento: "14/06/1968", telefono: "+51 981959300 ", celular: "+51 981959300", imagen: "imagen/Juan Uema Tamashiro.jpeg" },
+    { nombre: "Sandra Mariane Veaizán Alvarez", dni: "44119101", nacimiento: "13/02/1987", telefono: "+51 991116301 ", celular: "+51 991116301", imagen: "imagen/Sandra Mariane Veaizán Alvarez.jpeg" },
+    { nombre: "Luis Jaime Alarcón", dni: "06018556", nacimiento: "21/02/1960", telefono: "+51 997010712", celular: "+51 958494379", imagen: "imagen/Luis Jaime Alarcón.jpeg" },
+    { nombre: "Aarom Raziel Flores Leon", dni: "61052086", nacimiento: "15/05/2007", telefono: "+51 970627259", celular: "+51  970627259", imagen: "imagen/Aarom Raziel Flores Leon.jpeg" },
+    { nombre: "Javier Alberto Sandoval Torres", dni: "06673127", nacimiento: "11/06/1975", telefono: "+51 997320041", celular: "+51 997320041", imagen: "imagen/Javier Alberto Sandoval Torres.jpeg" },
+    { nombre: "Sandra Lissette Vela Obregón", dni: "44576594", nacimiento: "25/09/1987", telefono: "+51 967151718", celular: "+51 967151718 ", imagen: "imagen/Sandra Lissette Vela Obregón.jpeg" },
+    { nombre: "Inmer allen llanos cubas", dni: "44205600", nacimiento: "1/08/1986", telefono: "+51 929291993", celular: "+51 929291993", imagen: "imagen/Inmer allen llanos cubas.jpeg" },
+    { nombre: "José Edilberto Garcia Perez", dni: "08678281", nacimiento: "15/09/1967", telefono: "+51 923956441", celular: "+51 946663664", imagen: "imagen/José Edilberto Garcia Perez.jpeg" },
+    { nombre: "Karina Jannet boza cepeda", dni: "10688225", nacimiento: "19/01/1978", telefono: "+51 979382797", celular: "+51979382797", imagen: "imagen/Karina Jannet boza cepeda.jpeg" },
+    { nombre: "Humberto Guevara Torres", dni: "41733712", nacimiento: "25/02/1982", telefono: "+51 944656943", celular: "+51 944656943", imagen: "imagen/Humberto Guevara Torres.jpeg" },
+    { nombre: "Fernanda Luciana Peña Ceppi", dni: "70441897", nacimiento: "6/02/2006", telefono: "+51 936337659", celular: "+51 936337659", imagen: "imagen/Fernanda Luciana Peña Ceppi.jpeg" },
+    { nombre: "Victor Hugo Palacio Rimondi", dni: "40590511", nacimiento: "20/04/1980", telefono: "+51 993158880", celular: "+51 993158880", imagen: "imagen/Victor Hugo Palacio Rimondi.jpeg" },
+    { nombre: "Cesar David Mestas Yampi", dni: "43759298", nacimiento: "4/05/1959", telefono: "+51 903515487", celular: "+51 903515487", imagen: "imagen/Cesar David Mestas Yampi.jpeg" },
+    { nombre: "Doris minaya payano", dni: "09246017", nacimiento: "16/06/1956", telefono: "+51 934581390", celular: "+51 934581390", imagen: "imagen/Doris minaya payano.jpeg" },
+    { nombre: "Reyes Pérez Ricardo Ivan", dni: "42342712", nacimiento: "29/02/1984", telefono: "+51 991069069", celular: "+51 991069069", imagen: "imagen/Reyes Pérez Ricardo Ivan.jpeg" },
+    { nombre: "José Edilberto Garcia Perez", dni: "08678281", nacimiento: "15/09/1967", telefono: "+51  923956441", celular: "+51 946663664", imagen: "imagen/José Edilberto Garcia Perez1.jpeg" },
+    { nombre: "Gustavo Guillermo Seminario Salazar", dni: "06283498", nacimiento: "29/07/1951", telefono: "+51 965902507", celular: "+51 965902507", imagen: "imagen/Gustavo Guillermo Seminario Salazar.jpeg" },
+    { nombre: "Pamela Jaramillo Vilela", dni: " 41628955", nacimiento: "13/01/1983", telefono: "+51 989479641", celular: "+51 989479641", imagen: "imagen/Pamela Jaramillo Vilela.jpeg" }
+  ];
+
+    const coloresRuleta = ['#FFB6C1', '#87CEFA', '#98FB98', '#FFD700', '#FFA07A', '#9370DB', '#AFEEEE', '#F08080', '#B0E0E6', '#FF6347'];
+    let anguloActual = 0;
+    let girando = false;
+    let ganador = null;
+    let historialGanadores = [];
+    let animacionRuleta;
+
+    // Inicialización
+    document.addEventListener('DOMContentLoaded', function() {
+      cargarParticipantes();
+      dibujarRuleta();
+      
+      // Evento para cerrar modal
+      document.getElementById('modalImagen').addEventListener('click', function() {
+        this.style.display = 'none';
+      });
+    });
+
+    // Mostrar sección activa
+    function mostrarSeccion(id) {
+      document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+    // Cargar participantes con imágenes ampliables
+    function cargarParticipantes() {
+      const contenedor = document.getElementById('listaParticipantes');
+      
+      participantes.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        
+        card.innerHTML = `
+          <div class="card-img-container">
+            <img src="${p.imagen}" alt="Foto de ${p.nombre}">
+          </div>
+          <div class="card-content">
+            <p><strong>${p.nombre}</strong></p>
+            <p>DNI: ${p.dni}</p>
+            <p>Nacimiento: ${p.nacimiento}</p>
+            ${p.telefono ? `<p>Teléfono: ${p.telefono}</p>` : ''}
+            ${p.celular ? `<p>Celular: ${p.celular}</p>` : ''}
+          </div>
+        `;
+        
+        // Evento para mostrar imagen ampliada
+        card.querySelector('img').addEventListener('click', function(e) {
+          e.stopPropagation();
+          document.getElementById('imagenAmpliada').src = this.src;
+          document.getElementById('imagenAmpliada').alt = this.alt;
+          document.getElementById('modalImagen').style.display = 'flex';
+        });
+        
+        contenedor.appendChild(card);
+      });
+    }
+
+    // Dibujar ruleta inicial
+    function dibujarRuleta() {
+      const canvas = document.getElementById('ruleta');
+      const ctx = canvas.getContext('2d');
+      const radio = canvas.width / 2;
+      const anguloPorParticipante = (2 * Math.PI) / participantes.length;
+      
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Dibujar sectores
+      participantes.forEach((p, i) => {
+        const anguloInicio = i * anguloPorParticipante;
+        const anguloFin = anguloInicio + anguloPorParticipante;
+        
+        ctx.beginPath();
+        ctx.moveTo(radio, radio);
+        ctx.arc(radio, radio, radio - 20, anguloInicio, anguloFin);
+        ctx.closePath();
+        ctx.fillStyle = coloresRuleta[i % coloresRuleta.length];
+        ctx.fill();
+        ctx.strokeStyle = '#2c3e50';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        
+        // Texto
+        ctx.save();
+        ctx.translate(radio, radio);
+        ctx.rotate(anguloInicio + anguloPorParticipante / 2);
+        ctx.font = 'bold 14px Arial';
+        ctx.fillStyle = '#000';
+        ctx.textAlign = 'right';
+        
+        let nombreMostrar = p.nombre;
+        const maxAncho = radio * 0.6;
+        
+        while (ctx.measureText(nombreMostrar).width > maxAncho) {
+          nombreMostrar = nombreMostrar.slice(0, -1);
+        }
+        
+        if (nombreMostrar.length < p.nombre.length) {
+          nombreMostrar = nombreMostrar.slice(0, -1) + '...';
+        }
+        
+        ctx.fillText(nombreMostrar, radio - 30, 0);
+        ctx.restore();
+      });
+    }
+
+    // Girar ruleta con animación mejorada
+    function girarRuleta() {
+      if (girando) return;
+      if (participantes.length === 0) return;
+      
+      // Cancelar animación previa si existe
+      if (animacionRuleta) {
+        cancelAnimationFrame(animacionRuleta);
+      }
+
+      // Buscar ganador no repetido
+      let indiceGanador;
+      do {
+        indiceGanador = Math.floor(Math.random() * participantes.length);
+        // Si todos ya ganaron, reiniciar historial
+        if (historialGanadores.length >= participantes.length) {
+          historialGanadores = [];
+        }
+      } while (historialGanadores.includes(participantes[indiceGanador]));
+      
+      girando = true;
+      
+      // Configuración de la animación
+      const anguloFinal = (3 * Math.PI / 2) - (indiceGanador * (2 * Math.PI / participantes.length));
+      const vueltas = 6; // Número de vueltas completas
+      const anguloTotal = (vueltas * 2 * Math.PI) + anguloFinal - anguloActual;
+      const duracion = 5000; // 5 segundos
+      const inicio = performance.now();
+      
+      function animar(timestamp) {
+        const tiempoTranscurrido = timestamp - inicio;
+        const progreso = Math.min(tiempoTranscurrido / duracion, 1);
+        
+        // Función de easing para que empiece rápido y termine suave
+        const easing = progreso < 0.8 ? 
+          -0.5 * (Math.cos(Math.PI * progreso/0.8) - 1) :
+          1 - Math.pow(1 - (progreso - 0.8) * 5, 3);
+        
+        const nuevoAngulo = anguloActual + easing * anguloTotal;
+        dibujarRuletaGirando(nuevoAngulo);
+        
+        if (progreso < 1) {
+          animacionRuleta = requestAnimationFrame(animar);
+        } else {
+          // Finalizar la animación
+          girando = false;
+          ganador = participantes[indiceGanador];
+          historialGanadores.push(ganador);
+          mostrarGanador();
+          actualizarHistorial();
+        }
+      }
+      
+      animacionRuleta = requestAnimationFrame(animar);
+    }
+
+    // Dibujar ruleta en movimiento (versión optimizada)
+    function dibujarRuletaGirando(angulo) {
+      const canvas = document.getElementById('ruleta');
+      const ctx = canvas.getContext('2d');
+      const radio = canvas.width / 2;
+      const anguloPorParticipante = (2 * Math.PI) / participantes.length;
+      
+      // Borrar solo lo necesario (optimización)
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Dibujar todos los sectores
+      for (let i = 0; i < participantes.length; i++) {
+        const anguloInicio = i * anguloPorParticipante + angulo;
+        const anguloFin = anguloInicio + anguloPorParticipante;
+        
+        // Sector colorido
+        ctx.beginPath();
+        ctx.moveTo(radio, radio);
+        ctx.arc(radio, radio, radio - 20, anguloInicio, anguloFin);
+        ctx.closePath();
+        ctx.fillStyle = coloresRuleta[i % coloresRuleta.length];
+        ctx.fill();
+        ctx.strokeStyle = '#2c3e50';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        
+        // Texto del participante
+        ctx.save();
+        ctx.translate(radio, radio);
+        ctx.rotate(anguloInicio + anguloPorParticipante / 2);
+        ctx.font = 'bold 14px Arial';
+        ctx.fillStyle = '#000';
+        ctx.textAlign = 'right';
+        
+        // Ajustar nombre para que quepa
+        let nombre = participantes[i].nombre;
+        const maxAncho = radio * 0.6;
+        while (ctx.measureText(nombre).width > maxAncho && nombre.length > 0) {
+          nombre = nombre.slice(0, -1);
+        }
+        
+        if (nombre.length < participantes[i].nombre.length) {
+          nombre = nombre.slice(0, -1) + '...';
+        }
+        
+        ctx.fillText(nombre, radio - 30, 0);
+        ctx.restore();
+      }
+    }
+
+    // Mostrar ganador
+    function mostrarGanador() {
+      document.getElementById('nombreGanador').textContent = ganador.nombre;
+      document.getElementById('datosGanador').textContent = `DNI: ${ganador.dni} | Teléfono: ${ganador.celular || ganador.telefono}`;
+      document.getElementById('anuncioGanador').style.display = 'block';
+    }
+
+    // Cerrar anuncio de ganador
+    function cerrarAnuncio() {
+      document.getElementById('anuncioGanador').style.display = 'none';
+    }
+
+    // Actualizar historial de ganadores
+    function actualizarHistorial() {
+      const contenedor = document.getElementById('historialGanadores');
+      const elementoGanador = document.createElement('div');
+      elementoGanador.className = 'ganadorHistorial';
+      elementoGanador.innerHTML = `
+        <p><strong>${ganador.nombre}</strong></p>
+        <p>DNI: ${ganador.dni} | Tel: ${ganador.celular || ganador.telefono}</p>
+      `;
+      
+      // Limitar a 12 ganadores en el historial
+      const ganadores = contenedor.querySelectorAll('.ganadorHistorial');
+      if (ganadores.length >= 12) {
+        ganadores[0].remove();
+      }
+      
+      contenedor.appendChild(elementoGanador);
+    }
+  </script>
+</body>
+</html>
